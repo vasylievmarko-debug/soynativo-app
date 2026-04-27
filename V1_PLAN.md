@@ -212,8 +212,7 @@ passwordHash: string
 fullName: string
 role: enum ('student', 'teacher', 'admin')  // только 'student' в v1.0
 timezone: string (default 'UTC')
-schoolId: UUID (foreign key, default на 1 школу)
-subscriptionStatus: enum ('trial', 'active', 'expired')  // default 'active'
+subscriptionStatus: enum ('trial', 'active', 'expired')  // default 'active', не используется в логике v1.0
 createdAt: timestamp
 updatedAt: timestamp
 ```
@@ -225,33 +224,29 @@ title: string
 description?: string
 level?: string
 teacherId: UUID (foreign key to User)
-groupId: UUID (foreign key to Group, для v1.0 может быть NULL или 1 группа)
 startTime: timestamp (UTC)
 endTime: timestamp (UTC)
+type: enum ('individual', 'group')  // default 'individual' в v1.0, 'group' появится в v1.5+
 status: enum ('draft', 'scheduled', 'in_progress', 'completed', 'cancelled')
 googleMeetUrl?: string (добавит админ вручную в БД, не генерируется)
 recordingUrl?: string (NULL в v1.0)
 createdAt: timestamp
 updatedAt: timestamp
 
-// Связь с студентами: многие-ко-многим через pivot-таблицу?
-// ИЛИ Lesson принадлежит Group, а Group имеет много Students?
-// -> Для v1.0 используем Group. Lesson.groupId -> Group.id -> Students.
+// Связь с студентами: через lesson_participants (многие-ко-многим)
+// В v1.0: каждый individual урок имеет ровно одну запись в lesson_participants
+// В v1.5+: group уроки могут иметь несколько записей
 ```
 
-**Group:**
+**lesson_participants:**
 ```ts
-id: UUID
-name: string (e.g. "B1 Group 1")
-schoolId: UUID
+id: UUID (primary key)
+lessonId: UUID (foreign key to lessons)
+studentId: UUID (foreign key to users)
 createdAt: timestamp
-```
 
-**Pivot/Junction для Group-Student:**
-```ts
-group_id: UUID
-student_id: UUID
-enrolled_at: timestamp
+// Уникальное ограничение: UNIQUE (lesson_id, student_id)
+// Индекс на student_id для быстрого поиска уроков ученика
 ```
 
 ### 2.3 RLS / Authorization
@@ -260,10 +255,13 @@ enrolled_at: timestamp
 ```ts
 // В lesson контроллере при GET /lessons
 if (req.user.role === 'student') {
-  query.where('group_id IN (SELECT group_id FROM group_students WHERE student_id = ?)')
+  // JOIN lessons + lesson_participants WHERE student_id = req.user.id
+  query
+    .innerJoin('lesson_participants', 'lp', 'lp.lesson_id = lesson.id')
+    .where('lp.student_id = :studentId', { studentId: req.user.id })
 }
 if (req.user.role === 'teacher') {
-  query.where('teacher_id = ?', req.user.id)
+  query.where('lesson.teacher_id = :teacherId', { teacherId: req.user.id })
 }
 if (req.user.role === 'admin') {
   // видит все
@@ -274,6 +272,14 @@ if (req.user.role === 'admin') {
 ```ts
 GET /users/me -> req.user (из JWT)
 GET /users/:id -> 404 (не разрешаем в v1.0)
+```
+
+**Rule 3: subscription_status не проверяется в v1.0**
+```ts
+// subscription_status есть в БД (enum: trial, active, expired),
+// но логики авторизации на основе него нет.
+// Все залогинившиеся ученики видят свои уроки независимо от подписки.
+// Проверка появится в v1.4+ после интеграции Stripe.
 ```
 
 ### 2.4 Auth Flow
@@ -310,26 +316,18 @@ RootNavigator
 ├── AuthStack (когда не залогинен)
 │   └── LoginScreen
 │
-└── AppTabs (когда залогинен, bottom tab navigation)
-    ├── ProfileTab
-    │   └── ProfileScreen
+└── AppTabs (когда залогинен, bottom tab navigation с 3 табами)
+    ├── Tab 1: Предстоящие уроки
+    │   └── UpcomingLessonsScreen
     │
-    ├── LessonsTab (по умолчанию показывает "предстоящие")
-    │   ├── UpcomingLessonsScreen
-    │   └── PastLessonsScreen (или tab внутри)
+    ├── Tab 2: Прошедшие уроки
+    │   └── PastLessonsScreen
     │
-    └── (пока только эти 2 таба)
+    └── Tab 3: Профиль
+        └── ProfileScreen
 ```
 
-Или:
-
-```
-AppTabs
-├── ProfileTab -> ProfileScreen
-├── LessonsTab -> UpcomingLessonsScreen (с tab-переключателем на PastLessonsScreen внутри экрана)
-```
-
-Второй вариант проще. Выбираем второй.
+Три равноправных таба в bottom navigation (не вложенные, не подтабы внутри одного экрана).
 
 ### 3.2 Экраны
 
@@ -341,19 +339,7 @@ AppTabs
 - На успех: сохранить tokens в expo-secure-store, перейти в AppTabs
 - На ошибку: показать alert или inline text
 
-**ProfileScreen**
-- Avatar (иллюстрация, не реальное фото)
-- Текст: Имя ученика
-- Текст: Email
-- Текст: Таймзона
-- Button "Выйти" (clear tokens, перейти в AuthStack)
-- Состояния: loading (skeleton), error (retry button)
-
-**LessonsScreen** (с табами внутри)
-- Tab 1: "Предстоящие" (upcoming)
-- Tab 2: "Прошедшие" (past)
-
-**UpcomingLessonsScreen (внутри LessonsScreen)**
+**UpcomingLessonsScreen** (Tab 1 в AppTabs)
 - FlashList уроков
 - Карточка: дата (в локальной таймзоне), время, тема, имя учителя
 - Состояния:
@@ -362,10 +348,24 @@ AppTabs
   - error: ErrorState "Не удалось загрузить уроки" + кнопка "Попробовать"
   - success: список карточек
 - Pull-to-refresh (refetch)
-- Pagination: onEndReached -> fetch next page (cursor-based)
+- Сортировка: по start_time ASC (ближайшие первыми)
+- Pagination: опционально; можно загружать всё одним запросом
 
-**PastLessonsScreen (внутри LessonsScreen)**
-- То же, но отсортировано по убыванию даты (свежие сверху)
+**PastLessonsScreen** (Tab 2 в AppTabs)
+- FlashList уроков
+- Карточка: дата (в локальной таймзоне), время, тема, имя учителя
+- Состояния: loading, empty, error, success (аналогично UpcomingLessonsScreen)
+- Pull-to-refresh (refetch)
+- Сортировка: по start_time DESC (свежие первыми)
+- Pagination: опционально; можно загружать всё одним запросом
+
+**ProfileScreen** (Tab 3 в AppTabs)
+- Avatar (иллюстрация, не реальное фото)
+- Текст: Имя ученика
+- Текст: Email
+- Текст: Таймзона
+- Button "Выйти" (clear tokens, перейти в AuthStack)
+- Состояния: loading (skeleton), error (retry button)
 
 ### 3.3 UI Компоненты (дизайн-система)
 
@@ -397,7 +397,7 @@ apps/mobile/src/shared/ui/
    - Иллюстрация или инициалы (для v1.0 просто иконка)
 
 6. TabBar.tsx
-   - Bottom navigation с 2 табами
+   - Bottom navigation с 3 табами (Предстоящие, Прошедшие, Профиль)
    - Active/inactive states
 
 7. Text.tsx
@@ -496,6 +496,9 @@ useLoginMutation()          // POST /auth/login
 - ❌ Оффлайн mode (кроме persistent cache)
 - ❌ Search, filters (кроме таба upcoming/past)
 - ❌ Чат, комментарии
+- ❌ Проверка subscription_status в логике (поле есть в БД, но не используется)
+- ❌ Экраны "подписка неактивна", "требуется оплата"
+- ❌ Middleware проверки подписки
 
 ---
 
@@ -540,10 +543,11 @@ useLoginMutation()          // POST /auth/login
 
 ### День 6: Mobile UI Components
 
-- [ ] Создать все компоненты (Screen, Card, Button, Input, etc.)
-- [ ] Убедиться, что они соответствуют дизайну (cold neutrals + purple)
-- [ ] Разметка для light/dark themes
+- [ ] Создать все компоненты (Screen, Card, Button, Input, TabBar, etc.)
+- [ ] Палитра: cold bluish neutrals + purple brand color (Mark Design System)
+- [ ] Light/dark theme variant для каждого компонента
 - [ ] Prototyping в RN simulator
+- [ ] Typography: шрифты, размеры, weights
 
 ### День 7: Mobile Auth Flow
 
@@ -644,21 +648,15 @@ useLoginMutation()          // POST /auth/login
 
 ### Архитектурные риски
 
-1. **Group-Student связь непонятна**
-   - Текущая схема: Lesson.groupId → Group.id → group_students (многие-ко-многим)
-   - Вопрос: это нужно добавлять сейчас или для v1.0 Group может быть просто контейнером?
-   - **Action:** Уточнить перед кодом. Может быть, для v1.0 все студенты в одной группе, и в запросе к Lessons фильтруем просто по group_id?
+1. **Миграция с текущей схемы на lesson_participants**
+   - Текущий код может иметь другую структуру (groups, bookings)
+   - Нужно удалить groups и group_students таблицы
+   - Добавить lesson_participants (новая таблица)
+   - **Action:** Написать миграцию, убедиться что seed скрипт создаёт правильные связи
 
-2. **Lesson.status = 'scheduled' или другой enum?**
-   - Текущий код говорит: draft, scheduled, in_progress, completed, cancelled
-   - Для v1.0: все уроки которые показываем студентам будут 'scheduled' или 'completed'?
-   - **Action:** Уточнить seed script перед запуском
-
-3. **Lesson отношение к студентам**
-   - Текущий код показывает bookings модуль, но это не соответствует брифу
-   - Вопрос: Lesson принадлежит Group, а Group содержит многих Students?
-   - Или Lesson — это просто класс, и 1 Lesson = 1 или много студентов?
-   - **Action:** Уточнить и в seed script отразить правильные связи
+2. **Lesson.type поле новое**
+   - Добавить enum ('individual', 'group'), default 'individual'
+   - **Action:** В миграции добавить поле с правильным значением
 
 ### Backend риски
 
@@ -716,14 +714,32 @@ useLoginMutation()          // POST /auth/login
 
 ---
 
-## 8. СУММА: СУХО
+## 8. ИТОГОВЫЕ УТОЧНЕНИЯ
 
-- **Backend:** 5 эндпоинтов (login, refresh, me, list lessons upcoming, list lessons past). RLS на месте. БД setup с группами и студентами.
-- **Mobile:** 3 экрана (логин, профиль, уроки). 12 UI компонентов. TanStack Query + Zustand. Все на русском.
-- **Timeline:** 14 дней до TestFlight, реалистично. Первые 5 дней backend, дни 6-14 мобильное + интеграция + тестирование.
-- **Риски:** Group-Student связь нужна ясность. Refresh token логика может быть сломана. UI компоненты могут быть не полностью готовы.
-- **Unknowns:** Exact schema для Group-Student, текущее состояние UI компонентов, EAS Build setup время.
+**Дизайн-система:**
+- Палитра: cold bluish neutrals + purple brand color
+- Light/dark themes
+- Адаптировать Mark Design System под мобильное
+
+**Cursor pagination:**
+- В v1.0 избыточна (макс ~100 уроков на ученика)
+- Можно загружать всё одним запросом без cursor
+- Если проще оставить cursor — оставляй
+
+**Apple Developer Account:**
+- Ты начнёшь параллельно оформлять ($99/год)
+- Будет активен к дню 14
 
 ---
 
-**Ждёшь зелёного света на этот план?**
+## 9. СУММА: СУХО
+
+- **Database:** lesson_participants вместо groups. Lesson.type enum (individual/group, default individual в v1.0). subscription_status есть в User, но не используется в логике.
+- **Backend:** 5 эндпоинтов (login, refresh, me, list lessons upcoming/past). RLS через JOIN с lesson_participants. Все ученики видят уроки независимо от подписки.
+- **Mobile:** 3 равноправных таба в bottom navigation (Предстоящие, Прошедшие, Профиль). TanStack Query + Zustand. date-fns для таймзон. i18next (ru.json).
+- **Timeline:** 14 дней до TestFlight. Дни 1-5: backend (миграция, auth, lessons API). Дни 6-14: mobile (UI, экраны, интеграция, QA).
+- **Риски:** текущая схема БД может отличаться, refresh token может быть не реализован, UI компоненты могут быть не готовы. EAS Build setup может затянуться.
+
+---
+
+**Готов начинать день 1. Жду подтверждения.**
