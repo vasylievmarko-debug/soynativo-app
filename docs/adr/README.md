@@ -10,6 +10,7 @@
 | 0002 | [In-process EventBus + BullMQ для фоновых задач](./0002-event-bus-and-queues.md) | Accepted |
 | 0003 | [Feature-sliced architecture для мобильного приложения](./0003-feature-sliced-mobile.md) | Accepted |
 | 0004 | [Хранение токенов и секретов](./0004-secrets-and-tokens.md)         | Accepted |
+| 0005 | [Performance budget и стратегия](./0005-performance-budget.md)      | Accepted |
 
 ## Когда писать новый ADR
 

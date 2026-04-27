@@ -22,6 +22,22 @@
 | Изменение API контракта       | `docs/API.md`, существующие `*.controller.ts` в модуле                             |
 | Тесты                         | `apps/backend/test/README.md`, `apps/mobile/test/render.tsx`                       |
 
+## Performance budget — встраивается на старте
+
+Скорость — first-class concern. См. [`docs/adr/0005-performance-budget.md`](docs/adr/0005-performance-budget.md) и [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md).
+
+Если редактируешь горячий путь:
+
+- **Backend list endpoint** — cursor pagination через `@shared/pagination/cursor`, не OFFSET.
+- **Backend hot read** — cache-aside через `CacheService` + ключи из `@core/cache/cache-keys`.
+- **Новый запрос с join** — приложи `EXPLAIN ANALYZE` в PR или объясни, почему он не нужен (таблица < 1000 строк).
+- **Mobile list ≥ 20 items** — `<List>` (FlashList), item — `React.memo`, callbacks — `useStableCallback`.
+- **Mobile images** — `<Image>` из `@shared/ui` (expo-image), не `react-native`'s.
+- **Mobile cold-load** — `<Skeleton>` вместо `<Spinner>`.
+- **Mutation** — оптимистичный паттерн с `onMutate`/`onError`/`onSettled`.
+
+Никогда не пиши код, который заведомо нарушает бюджет (`p95 > 200ms` для read-эндпоинта, `< 58 fps` на скролле). Если не уверен — спроси у автора PR.
+
 ## Жёсткие правила
 
 ✅ **Всегда:**

@@ -58,7 +58,22 @@
 - **AAA:** Arrange / Act / Assert разделены пустой строкой.
 - **Не мокай то, что владеешь** (свои сервисы) — используй test doubles. Мокай только границу системы (HTTP, БД, время).
 
-## 9. Git
+## 9. Performance — встроено, не пристёгнуто
+
+Полный playbook — [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md). Бюджет — [`docs/adr/0005-performance-budget.md`](docs/adr/0005-performance-budget.md). Минимум, что обязан помнить каждый автор PR:
+
+- **Все списки на бэке — cursor-based.** OFFSET запрещён.
+- **Все API hot-paths имеют индекс.** В PR прилагается `EXPLAIN ANALYZE` или ссылка на существующий индекс.
+- **Кэш — на write всегда инвалидируется.** Cache miss лучше silent stale data.
+- **Heavy work уходит в BullMQ.** В синхронном пути — только то, без чего ответ не имеет смысла.
+- **Списки в mobile — через `<List>` (FlashList).** Item-компоненты — `React.memo` со стабильными колбэками (`useStableCallback`).
+- **Картинки — через `<Image>` (expo-image).** Никогда `react-native`'s `Image`.
+- **Анимации — Reanimated 3.** Никаких `Animated` из RN.
+- **Cold load — `<Skeleton>`, не `<Spinner>`.**
+- **Tap навигации — `usePrefetch` на `onPressIn`.**
+- **Изменение состояния — оптимистичная мутация** (паттерн в PERFORMANCE.md).
+
+## 10. Git
 
 - **Conventional Commits** (см. `commitlint.config.cjs`):
   - `feat(auth): add refresh token rotation`

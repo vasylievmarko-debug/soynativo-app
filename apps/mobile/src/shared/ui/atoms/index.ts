@@ -14,3 +14,7 @@ export { Spinner } from './Spinner';
 export type { SpinnerProps } from './Spinner';
 export { Stack } from './Stack';
 export type { StackProps } from './Stack';
+export { Image } from './Image';
+export type { ImageProps } from './Image';
+export { Skeleton, SkeletonRow } from './Skeleton';
+export type { SkeletonProps } from './Skeleton';

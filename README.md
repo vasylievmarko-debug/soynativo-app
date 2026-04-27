@@ -56,6 +56,7 @@ soynativo-app/
 3. **Feature-sliced mobile** — `features/X` не зависит от `features/Y`. Общее живёт в `shared/`. См. [ADR-0003](docs/adr/0003-feature-sliced-mobile.md).
 4. **EventBus для in-process событий + BullMQ для фоновой работы** — см. [ADR-0002](docs/adr/0002-event-bus-and-queues.md).
 5. **Безопасные дефолты** — Helmet, CORS allow-list, rate-limit, валидация Zod, токены в Keychain, секреты из env с проверкой при старте.
+6. **Performance — first-class concern.** Бюджет (p95/p99 на бэке, 60fps + < 2s cold start на mobile) встроен в архитектуру: cursor pagination, Redis cache-aside, expo-image, FlashList, persistent React Query, Reanimated 3, cluster mode, slow-query log, Server-Timing header. См. [ADR-0005](docs/adr/0005-performance-budget.md) и [PERFORMANCE.md](docs/PERFORMANCE.md).
 
 ## Быстрый старт
 
@@ -79,6 +80,10 @@ yarn dev
 ## Документация
 
 - [SETUP.md](SETUP.md) — первоначальная настройка
+- [CONVENTIONS.md](CONVENTIONS.md) — стиль кода и LLM-friendly правила
+- [GLOSSARY.md](GLOSSARY.md) — словарь доменных терминов
+- [AGENTS.md](AGENTS.md) — инструкции для AI-агентов
+- [docs/PERFORMANCE.md](docs/PERFORMANCE.md) — практический playbook по скорости
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — обзор архитектуры
 - [docs/adr/](docs/adr/) — записи об архитектурных решениях
 - [docs/API.md](docs/API.md) — API endpoints
