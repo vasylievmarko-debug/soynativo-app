@@ -17,6 +17,8 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+# Trigger: manual re-run after GitHub Pages enabled
+
 jobs:
   build:
     runs-on: ubuntu-latest
