@@ -1,15 +1,19 @@
 import React from 'react';
 import { Text as RNText, type TextProps as RNTextProps, type TextStyle } from 'react-native';
+import type { TypographyVariant } from '@soynativo/design-tokens';
 import { useTheme } from '../theme/ThemeProvider';
 
-type Variant = 'body' | 'caption' | 'h1' | 'h2' | 'button';
-
 export interface TextProps extends RNTextProps {
-  variant?: Variant;
+  variant?: TypographyVariant;
   muted?: boolean;
   color?: string;
 }
 
+/**
+ * Typed text component. Always use this instead of RN's `Text`. Variant
+ * choices come from the typography scale in `@soynativo/design-tokens`, so
+ * adding a new variant means adding it there once.
+ */
 export function Text({ variant = 'body', muted, color, style, ...rest }: TextProps): React.ReactElement {
   const theme = useTheme();
   const base: TextStyle = {

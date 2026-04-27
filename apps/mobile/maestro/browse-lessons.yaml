@@ -1,0 +1,12 @@
+# Просмотр списка уроков и переход на детальный экран.
+appId: com.soynativo.app
+---
+- runFlow: login.yaml
+- tapOn: "Lessons"
+- assertVisible:
+    text: ".+"  # любой урок
+    enabled: true
+- tapOn:
+    index: 0
+    text: ".+"
+- assertVisible: "Book"

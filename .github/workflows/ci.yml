@@ -4,51 +4,92 @@ on:
   push:
     branches: [main, develop]
   pull_request:
-    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  lint-and-test:
+  static:
+    name: Lint + typecheck
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x]
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 20
           cache: 'yarn'
+      - run: corepack enable
+      - run: yarn install --immutable
+      - run: yarn lint
+      - run: yarn type-check
 
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
+  unit:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'yarn'
+      - run: corepack enable
+      - run: yarn install --immutable
+      - run: yarn workspace @soynativo/backend test
+      - run: yarn workspace @soynativo/mobile test
 
-      - name: Lint
-        run: yarn lint
-
-      - name: Type check
-        run: yarn type-check
-
-      - name: Test
-        run: yarn test
+  integration:
+    name: Backend integration tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: soynativo
+          POSTGRES_PASSWORD: soynativo
+          POSTGRES_DB: soynativo_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U soynativo"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 3s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgres://soynativo:soynativo@localhost:5432/soynativo_test
+      REDIS_URL: redis://localhost:6379/1
+      JWT_ACCESS_SECRET: ci-access-secret-must-be-at-least-32-chars
+      JWT_REFRESH_SECRET: ci-refresh-secret-must-be-at-least-32-chars
+      LOG_LEVEL: silent
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'yarn'
+      - run: corepack enable
+      - run: yarn install --immutable
+      - run: yarn workspace @soynativo/backend test:integration
 
   build:
+    name: Build
     runs-on: ubuntu-latest
-
+    needs: [static, unit]
     steps:
       - uses: actions/checkout@v4
-
-      - name: Use Node.js 20.x
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 20
           cache: 'yarn'
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Build
-        run: yarn build
+      - run: corepack enable
+      - run: yarn install --immutable
+      - run: yarn workspace @soynativo/shared build
+      - run: yarn workspace @soynativo/backend build

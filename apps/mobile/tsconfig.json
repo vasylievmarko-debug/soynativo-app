@@ -12,7 +12,8 @@
       "@app/*": ["src/app/*"],
       "@features/*": ["src/features/*"],
       "@shared/*": ["src/shared/*"],
-      "@soynativo/shared": ["../../packages/shared/src"]
+      "@soynativo/shared": ["../../packages/shared/src"],
+      "@soynativo/design-tokens": ["../../packages/design-tokens/src"]
     }
   },
   "include": ["src", "index.ts", "app.json"]

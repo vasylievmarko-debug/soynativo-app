@@ -19,6 +19,7 @@
     "@react-navigation/bottom-tabs": "^6.5.12",
     "@react-navigation/native": "^6.1.10",
     "@react-navigation/native-stack": "^6.9.17",
+    "@soynativo/design-tokens": "workspace:*",
     "@soynativo/shared": "workspace:*",
     "@tanstack/react-query": "^5.25.0",
     "axios": "^1.6.2",

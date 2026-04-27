@@ -12,6 +12,7 @@ module.exports = function (api) {
             '@features': './src/features',
             '@shared': './src/shared',
             '@soynativo/shared': '../../packages/shared/src',
+            '@soynativo/design-tokens': '../../packages/design-tokens/src',
           },
         },
       ],

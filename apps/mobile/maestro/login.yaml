@@ -1,0 +1,16 @@
+# Soynativo: успешный логин ученика.
+# Run: maestro test apps/mobile/maestro/login.yaml
+appId: com.soynativo.app
+---
+- launchApp:
+    clearState: true
+- assertVisible: "Sign in"
+- tapOn:
+    accessibilityText: "Email"
+- inputText: "student@test.local"
+- tapOn:
+    accessibilityText: "Password"
+- inputText: "Sup3rSecret!"
+- tapOn: "Sign in"
+- assertVisible: "Soynativo"
+- assertVisible: "Lessons"
