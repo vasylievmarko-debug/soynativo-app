@@ -4,41 +4,29 @@
     "slug": "soynativo",
     "version": "0.1.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
     "ios": {
-      "supportsTabletMode": true,
+      "supportsTablet": true,
       "bundleIdentifier": "com.soynativo.app",
-      "buildNumber": "1"
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Soynativo uses the camera during video lessons.",
+        "NSMicrophoneUsageDescription": "Soynativo uses the microphone during video lessons."
+      }
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
       "package": "com.soynativo.app",
-      "versionCode": 1
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
+      "versionCode": 1,
+      "permissions": ["CAMERA", "RECORD_AUDIO"]
     },
     "plugins": [
-      [
-        "expo-camera",
-        {
-          "cameraPermission": "Allow Soynativo to access your camera for video calls"
-        }
-      ]
+      ["expo-camera", { "cameraPermission": "Allow Soynativo to access your camera for video lessons" }],
+      "expo-secure-store",
+      "expo-localization"
     ],
     "extra": {
-      "eas": {
-        "projectId": "your-project-id-here"
-      }
+      "eas": { "projectId": "REPLACE_WITH_EAS_PROJECT_ID" }
     }
   }
 }

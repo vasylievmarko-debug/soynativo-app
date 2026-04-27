@@ -1,0 +1,25 @@
+{
+  "common": {
+    "appName": "Soynativo",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "retry": "Retry",
+    "error": "Error"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signUp": "Sign up",
+    "email": "Email",
+    "password": "Password",
+    "logout": "Log out"
+  },
+  "tabs": {
+    "home": "Home",
+    "lessons": "Lessons",
+    "bookings": "Bookings",
+    "profile": "Profile"
+  },
+  "lessons": { "empty": "No lessons yet" },
+  "bookings": { "empty": "No bookings yet" }
+}

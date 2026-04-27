@@ -1,0 +1,25 @@
+{
+  "common": {
+    "appName": "Soynativo",
+    "loading": "Cargando...",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "retry": "Reintentar",
+    "error": "Error"
+  },
+  "auth": {
+    "signIn": "Iniciar sesión",
+    "signUp": "Registrarse",
+    "email": "Correo",
+    "password": "Contraseña",
+    "logout": "Cerrar sesión"
+  },
+  "tabs": {
+    "home": "Inicio",
+    "lessons": "Lecciones",
+    "bookings": "Reservas",
+    "profile": "Perfil"
+  },
+  "lessons": { "empty": "Aún no hay lecciones" },
+  "bookings": { "empty": "Aún no hay reservas" }
+}

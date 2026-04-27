@@ -1,0 +1,25 @@
+{
+  "common": {
+    "appName": "Soynativo",
+    "loading": "Загрузка...",
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "retry": "Повторить",
+    "error": "Ошибка"
+  },
+  "auth": {
+    "signIn": "Войти",
+    "signUp": "Регистрация",
+    "email": "Email",
+    "password": "Пароль",
+    "logout": "Выйти"
+  },
+  "tabs": {
+    "home": "Главная",
+    "lessons": "Уроки",
+    "bookings": "Бронирования",
+    "profile": "Профиль"
+  },
+  "lessons": { "empty": "Пока нет уроков" },
+  "bookings": { "empty": "Нет бронирований" }
+}

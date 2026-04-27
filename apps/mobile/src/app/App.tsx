@@ -1,0 +1,13 @@
+import React from 'react';
+import { StatusBar } from 'expo-status-bar';
+import { AppProviders } from './providers/AppProviders';
+import { RootNavigator } from './navigation/RootNavigator';
+
+export default function App(): React.ReactElement {
+  return (
+    <AppProviders>
+      <StatusBar style="auto" />
+      <RootNavigator />
+    </AppProviders>
+  );
+}
