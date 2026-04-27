@@ -17,6 +17,7 @@
   "workspaces": [
     "apps/mobile",
     "apps/backend",
+    "apps/storybook",
     "packages/*"
   ],
   "devDependencies": {
