@@ -15,6 +15,7 @@
     "react-native-web": "^0.19.11"
   },
   "devDependencies": {
+    "storybook": "^8.0.0",
     "@storybook/addon-controls": "^8.0.0",
     "@storybook/addon-docs": "^8.0.0",
     "@storybook/addon-essentials": "^8.0.0",
