@@ -45,9 +45,41 @@ export class InMemoryUserRepository implements Pick<
     return { affected: u ? 1 : 0 };
   }
 
-  async list({ page, limit, role }: { page: number; limit: number; role?: UserEntity['role'] }): Promise<[UserEntity[], number]> {
-    const all = [...this.store.values()].filter((u) => !u.deletedAt && (!role || u.role === role));
-    return [all.slice((page - 1) * limit, page * limit), all.length];
+  async list({
+    cursor,
+    limit,
+    role,
+  }: {
+    cursor?: string;
+    limit: number;
+    role?: UserEntity['role'];
+  }): Promise<{ items: UserEntity[]; nextCursor: string | null }> {
+    const all = [...this.store.values()]
+      .filter((u) => !u.deletedAt && (!role || u.role === role))
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+    let startIdx = 0;
+    if (cursor) {
+      try {
+        const decoded = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
+        const idx = all.findIndex((u) => u.id === decoded.id);
+        if (idx >= 0) startIdx = idx + 1;
+      } catch {
+        /* ignore invalid cursor */
+      }
+    }
+
+    const slice = all.slice(startIdx, startIdx + limit);
+    const hasMore = startIdx + limit < all.length;
+    const last = slice[slice.length - 1];
+    const nextCursor =
+      hasMore && last
+        ? Buffer.from(
+            JSON.stringify({ v: last.createdAt.toISOString(), id: last.id })
+          ).toString('base64url')
+        : null;
+
+    return { items: slice, nextCursor };
   }
 
   // Test-only helpers

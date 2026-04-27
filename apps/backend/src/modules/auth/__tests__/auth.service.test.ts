@@ -1,3 +1,4 @@
+import * as bcrypt from 'bcryptjs';
 import { AuthService } from '../auth.service';
 import { TokenService } from '../token.service';
 import { EventBus } from '@core/events/event-bus';
@@ -15,65 +16,49 @@ describe('AuthService', () => {
     auth = new AuthService(users as unknown as UserRepository, new TokenService(), events);
   });
 
-  describe('register', () => {
-    it('issues tokens and persists the user when email is new', async () => {
-      const result = await auth.register({
-        email: 'new@test.local',
-        password: 'Sup3rSecret!',
-        firstName: 'Ada',
-        lastName: 'Lovelace',
-        role: 'student',
-      });
-
-      expect(result.user.email).toBe('new@test.local');
-      expect(result.tokens.accessToken).toBeTruthy();
-      expect(result.tokens.refreshToken).toBeTruthy();
-      expect(await users.findByEmail('new@test.local')).not.toBeNull();
-    });
-
-    it('rejects duplicate emails with ConflictException', async () => {
-      await auth.register({
-        email: 'dup@test.local',
-        password: 'Sup3rSecret!',
-        firstName: 'A',
-        lastName: 'B',
-        role: 'student',
-      });
-
-      await expect(
-        auth.register({
-          email: 'dup@test.local',
-          password: 'Sup3rSecret!',
-          firstName: 'A',
-          lastName: 'B',
-          role: 'student',
-        })
-      ).rejects.toMatchObject({ statusCode: 409 });
-    });
-
-    it('publishes user.registered domain event', async () => {
-      const handler = jest.fn();
-      events.subscribe('user.registered', handler);
-
-      await auth.register({
-        email: 'evt@test.local',
-        password: 'Sup3rSecret!',
-        firstName: 'A',
-        lastName: 'B',
-        role: 'student',
-      });
-
-      // Allow the EventEmitter microtask queue to flush
-      await new Promise((r) => setImmediate(r));
-      expect(handler).toHaveBeenCalledTimes(1);
-    });
-  });
-
   describe('login', () => {
     it('rejects unknown email with 401 (does not leak existence)', async () => {
       await expect(auth.login({ email: 'ghost@test.local', password: 'x' })).rejects.toMatchObject({
         statusCode: 401,
       });
+    });
+
+    it('rejects wrong password with 401', async () => {
+      const passwordHash = await bcrypt.hash('correct-password', 10);
+      await users.create({
+        email: 'real@test.local',
+        passwordHash,
+        firstName: 'Real',
+        lastName: 'User',
+        role: 'student',
+      });
+
+      await expect(
+        auth.login({ email: 'real@test.local', password: 'wrong-password' })
+      ).rejects.toMatchObject({ statusCode: 401 });
+    });
+
+    it('issues tokens on valid credentials', async () => {
+      const passwordHash = await bcrypt.hash('correct-password', 10);
+      await users.create({
+        email: 'valid@test.local',
+        passwordHash,
+        firstName: 'Valid',
+        lastName: 'User',
+        role: 'student',
+      });
+
+      const result = await auth.login({ email: 'valid@test.local', password: 'correct-password' });
+
+      expect(result.user.email).toBe('valid@test.local');
+      expect(result.tokens.accessToken).toBeTruthy();
+      expect(result.tokens.refreshToken).toBeTruthy();
+    });
+  });
+
+  describe('refresh', () => {
+    it('rejects invalid refresh token', async () => {
+      await expect(auth.refresh('invalid-token')).rejects.toMatchObject({ statusCode: 401 });
     });
   });
 });

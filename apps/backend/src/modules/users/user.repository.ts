@@ -1,6 +1,7 @@
 import { injectable } from 'tsyringe';
 import type { Repository } from 'typeorm';
 import { AppDataSource } from '@core/database/data-source';
+import { paginate, type CursorPage } from '@shared/pagination/cursor';
 import { UserEntity } from './user.entity';
 
 export interface CreateUserData {
@@ -8,6 +9,12 @@ export interface CreateUserData {
   passwordHash: string;
   firstName: string;
   lastName: string;
+  role?: UserEntity['role'];
+}
+
+export interface ListUsersCursorParams {
+  cursor?: string;
+  limit: number;
   role?: UserEntity['role'];
 }
 
@@ -47,12 +54,18 @@ export class UserRepository {
     return this.repo.softDelete(id);
   }
 
-  list(params: { page: number; limit: number; role?: UserEntity['role'] }): Promise<[UserEntity[], number]> {
-    const qb = this.repo.createQueryBuilder('u').orderBy('u.createdAt', 'DESC');
+  /**
+   * Cursor-based pagination over users. Sorted by createdAt DESC (newest first).
+   * OFFSET is forbidden per CONVENTIONS.md §9.
+   */
+  list(params: ListUsersCursorParams): Promise<CursorPage<UserEntity>> {
+    const qb = this.repo.createQueryBuilder('u');
     if (params.role) qb.where('u.role = :role', { role: params.role });
-    return qb
-      .skip((params.page - 1) * params.limit)
-      .take(params.limit)
-      .getManyAndCount();
+    return paginate(qb, {
+      sortField: 'createdAt',
+      direction: 'DESC',
+      cursor: params.cursor,
+      limit: params.limit,
+    });
   }
 }

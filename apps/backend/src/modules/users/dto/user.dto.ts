@@ -7,15 +7,16 @@ export const UpdateUserSchema = z.object({
   avatarUrl: z.string().url().optional(),
   telegramChatId: z.string().optional(),
   notificationsEnabled: z.boolean().optional(),
+  timezone: z.string().optional(),
 });
 export type UpdateUserDto = z.infer<typeof UpdateUserSchema>;
 
-export const ListUsersQuerySchema = z.object({
-  page: z.coerce.number().int().min(1).default(1),
+export const ListUsersCursorQuerySchema = z.object({
+  cursor: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(20),
   role: z.enum(['student', 'teacher', 'admin']).optional(),
 });
-export type ListUsersQuery = z.infer<typeof ListUsersQuerySchema>;
+export type ListUsersCursorQuery = z.infer<typeof ListUsersCursorQuerySchema>;
 
 export interface UserPublicDto {
   id: string;
@@ -25,6 +26,8 @@ export interface UserPublicDto {
   avatarUrl?: string | null;
   role: string;
   status: string;
+  timezone: string;
+  subscriptionStatus: 'trial' | 'active' | 'expired';
   notificationsEnabled: boolean;
   createdAt: Date;
 }
@@ -38,6 +41,8 @@ export function toUserPublicDto(u: UserEntity): UserPublicDto {
     avatarUrl: u.avatarUrl,
     role: u.role,
     status: u.status,
+    timezone: u.timezone,
+    subscriptionStatus: u.subscriptionStatus,
     notificationsEnabled: u.notificationsEnabled,
     createdAt: u.createdAt,
   };
