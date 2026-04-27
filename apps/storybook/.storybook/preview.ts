@@ -1,4 +1,5 @@
 import type { Preview } from '@storybook/react';
+import { withThemeProvider } from './decorators/theme-provider';
 
 // Viewport presets для мобильных размеров
 const customViewports = {
@@ -44,7 +45,16 @@ const preview: Preview = {
     docs: {
       toc: true,
     },
+    themes: {
+      default: 'light',
+      list: [
+        { name: 'Light', value: 'light' },
+        { name: 'Dark', value: 'dark' },
+      ],
+    },
   },
+  decorators: [withThemeProvider],
 };
 
 export default preview;
+
