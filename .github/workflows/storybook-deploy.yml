@@ -5,10 +5,7 @@ on:
     branches:
       - main
       - develop
-    paths:
-      - 'apps/storybook/**'
-      - 'apps/mobile/src/shared/ui/**'
-      - '.github/workflows/storybook-deploy.yml'
+      - 'claude/**'
   workflow_dispatch:
 
 permissions:
@@ -31,16 +28,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'yarn'
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: yarn install
+
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v4
 
       - name: Build Storybook
         run: yarn workspace @soynativo/storybook build-storybook
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
+        env:
+          STORYBOOK_BASE_PATH: ${{ steps.pages.outputs.base_path }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
