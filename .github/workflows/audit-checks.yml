@@ -1,0 +1,133 @@
+name: Audit fixes verification
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'claude/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    name: Static checks (no install needed)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Run audit verification (static)
+        run: bash scripts/verify-fixes.sh
+
+  full-checks:
+    runs-on: ubuntu-latest
+    name: Full checks (with DB + tests)
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: soynativo
+          POSTGRES_PASSWORD: soynativo
+          POSTGRES_DB: soynativo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Type-check backend
+        run: yarn workspace @soynativo/backend type-check
+
+      - name: Run unit tests
+        run: yarn workspace @soynativo/backend test
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgres://soynativo:soynativo@localhost:5432/soynativo
+          REDIS_URL: redis://localhost:6379
+          JWT_ACCESS_SECRET: test-access-secret-must-be-at-least-32-chars-long
+          JWT_REFRESH_SECRET: test-refresh-secret-must-be-at-least-32-chars-long-different
+          BCRYPT_ROUNDS: 4
+
+      - name: Create test env file
+        run: |
+          cat > apps/backend/.env <<EOF
+          NODE_ENV=test
+          DATABASE_URL=postgres://soynativo:soynativo@localhost:5432/soynativo
+          REDIS_URL=redis://localhost:6379
+          JWT_ACCESS_SECRET=test-access-secret-must-be-at-least-32-chars-long
+          JWT_REFRESH_SECRET=test-refresh-secret-must-be-at-least-32-chars-long-different
+          BCRYPT_ROUNDS=4
+          EOF
+
+      - name: Run migrations
+        run: yarn workspace @soynativo/backend migration:run
+
+      - name: Seed database
+        run: yarn workspace @soynativo/backend seed
+        env:
+          NODE_ENV: development
+
+      - name: Verify A4 — individual lessons in DB
+        run: |
+          INDIVIDUAL=$(PGPASSWORD=soynativo psql -h localhost -U soynativo -d soynativo -tAc "SELECT count(*) FROM lessons WHERE type='individual'")
+          MULTI=$(PGPASSWORD=soynativo psql -h localhost -U soynativo -d soynativo -tAc "SELECT count(*) FROM (SELECT \"lessonId\", count(*) c FROM lesson_participants GROUP BY \"lessonId\" HAVING count(*) > 1) x")
+          echo "Individual lessons: $INDIVIDUAL"
+          echo "Lessons with >1 participant: $MULTI"
+          if [ "$INDIVIDUAL" -lt 18 ]; then
+            echo "❌ FAIL: expected ≥18 individual lessons, got $INDIVIDUAL"
+            exit 1
+          fi
+          if [ "$MULTI" -ne 0 ]; then
+            echo "❌ FAIL: $MULTI individual lessons have >1 participant"
+            exit 1
+          fi
+          echo "✅ A4 verified"
+
+      - name: Verify A5 — /auth/register returns 404
+        run: |
+          yarn workspace @soynativo/backend dev &
+          BACKEND_PID=$!
+          sleep 5
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:3000/api/v1/auth/register \
+            -H "Content-Type: application/json" \
+            -d '{"email":"x@x.com","password":"12345678","firstName":"a","lastName":"b"}')
+          kill $BACKEND_PID || true
+          if [ "$STATUS" = "404" ]; then
+            echo "✅ A5 verified: /auth/register returns 404"
+          else
+            echo "❌ FAIL: /auth/register returned $STATUS (expected 404)"
+            exit 1
+          fi
