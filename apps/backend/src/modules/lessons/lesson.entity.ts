@@ -33,6 +33,9 @@ export class LessonEntity extends BaseEntity {
   @Column({ type: 'integer' })
   durationMinutes!: number;
 
+  @Column({ type: 'enum', enum: ['individual', 'group'], default: 'individual' })
+  type!: 'individual' | 'group';
+
   @Column({ type: 'integer', default: 20 })
   maxStudents!: number;
 

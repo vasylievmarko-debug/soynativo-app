@@ -26,6 +26,12 @@ export class UserEntity extends BaseEntity {
   @Column({ type: 'enum', enum: ['active', 'inactive', 'suspended'], default: 'active' })
   status!: UserStatus;
 
+  @Column({ type: 'varchar', length: 50, default: 'UTC' })
+  timezone!: string;
+
+  @Column({ type: 'enum', enum: ['trial', 'active', 'expired'], default: 'active' })
+  subscriptionStatus!: 'trial' | 'active' | 'expired';
+
   @Column({ type: 'varchar', length: 255, nullable: true })
   telegramChatId?: string | null;
 
