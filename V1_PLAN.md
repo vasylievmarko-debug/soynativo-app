@@ -505,43 +505,84 @@ useLoginMutation()          // POST /auth/login
 ## 4. ПЛАН ПО ДНЯМ ДО TestFlight
 
 **Стартовая дата:** 2026-04-28  
-**Целевая дата TestFlight:** 2026-05-12 (2 недели)
+**Целевая дата TestFlight:** 2026-05-14 (16-17 дней с risk management)
 
-### День 1-2: Setup + Database
+### День 1-2: Setup + Database ✅ (уже готово)
 
-- [x] Убрать из кода: Stripe, Supabase упоминания, WebSocket-чат
-- [ ] Добавить в schema: школы, группы, pivot group_students
-- [ ] Добавить в User: subscription_status поле
-- [ ] Написать миграцию
-- [ ] Написать seed script (1 школа, 1 группа, 1 учитель, 3 ученика, 10 уроков)
-- [ ] Запустить локально, проверить БД
+- [x] Убрать из кода: Stripe, Supabase упоминания
+- [x] Добавить в schema: lesson_participants, lesson.type
+- [x] Добавить в User: subscription_status, timezone
+- [x] Написать миграцию V1Schema
+- [x] Написать seed script (1 учитель, 3 ученика, 10 уроков)
+- [x] Запустить локально, проверить БД
 
-### День 3: Auth Backend
+### День 3: Auth Backend + GET /users/me
 
 - [ ] Проверить/исправить POST /auth/login
 - [ ] Проверить/исправить POST /auth/refresh
+- [ ] Реализовать GET /users/me (защищено JWT)
 - [ ] Добавить RLS checks в контроллеры
 - [ ] Написать unit-тесты для auth service
 - [ ] Вручную протестировать в Postman/Insomnia
 
-### День 4: Lessons API
+### День 4-5: Lessons API
 
 - [ ] Реализовать GET /lessons?status=upcoming
 - [ ] Реализовать GET /lessons?status=past
-- [ ] Фильтрация по student_id (из JWT)
+- [ ] Фильтрация по student_id (из JWT, JOIN с lesson_participants)
 - [ ] Сортировка (upcoming ASC, past DESC)
-- [ ] Cursor pagination
+- [ ] Cursor pagination (опционально; можно загружать всё одним запросом)
 - [ ] Написать unit-тесты
 - [ ] Вручную протестировать в Postman
 
-### День 5: GET /users/me
+### День 6: Risk Management — Backend Part 1
 
-- [ ] Реализовать GET /users/me
-- [ ] Убедиться, что возвращает правильные поля
-- [ ] Написать unit-тесты
-- [ ] Вручную протестировать
+**Sentry интеграция:**
+- [ ] Установить @sentry/node
+- [ ] Инициализировать Sentry в app.ts с DSN из .env
+- [ ] Подключить error handler middleware
+- [ ] Ловить unhandled exceptions через process.on('uncaughtException')
 
-### День 6: Mobile UI Components
+**Окружения и .env:**
+- [ ] Создать .env.development, .env.staging, .env.production
+- [ ] SENTRY_DSN в .env (не в коде)
+- [ ] DATABASE_URL, REDIS_URL, API_PORT в .env
+- [ ] Проверить .gitignore: .env, .env.* исключены
+- [ ] Убедиться что нет хардкоженных secrets в коде
+
+**Healthcheck endpoint:**
+- [ ] GET /health — проверяет БД и Redis, возвращает 200 если OK
+- [ ] Используется для UptimeRobot мониторинга
+
+**Feedback API:**
+- [ ] POST /feedback (защищено JWT)
+- [ ] Body: { message: string }
+- [ ] Ответ включает: user_id, app_version, OS, device (в мобильном)
+- [ ] Бэкенд отправляет в мой Telegram через Telegram bot
+- [ ] Используется BullMQ job для асинхронной отправки
+
+### День 7: Risk Management — Mobile Part 1 + Sentry
+
+**Sentry интеграция:**
+- [ ] Установить @sentry/react-native
+- [ ] Инициализировать Sentry в AppProviders с DSN из .env
+- [ ] ErrorBoundary обёрнут в Sentry.ErrorBoundary
+- [ ] Ловит crashes и errors
+
+**Окружения:**
+- [ ] Создать .env.development, .env.production на мобильном
+- [ ] API_URL зависит от окружения
+- [ ] Вычитать app version из package.json и app.json
+- [ ] Никаких хардкоженных URL или ключей
+
+**Feedback форма:**
+- [ ] Кнопка в ProfileScreen: "Сообщить о проблеме"
+- [ ] Модальное окно с textarea
+- [ ] POST /feedback с { message }
+- [ ] Response: "Спасибо, ваше сообщение отправлено"
+- [ ] На ошибку: retry кнопка
+
+### День 8: Mobile UI Components
 
 - [ ] Создать все компоненты (Screen, Card, Button, Input, TabBar, etc.)
 - [ ] Палитра: cold bluish neutrals + purple brand color (Mark Design System)
@@ -549,47 +590,59 @@ useLoginMutation()          // POST /auth/login
 - [ ] Prototyping в RN simulator
 - [ ] Typography: шрифты, размеры, weights
 
-### День 7: Mobile Auth Flow
+### День 9: Mobile Auth Flow
 
 - [ ] LoginScreen (форма, обработка ошибок, сохранение tokens)
 - [ ] RootNavigator (AuthStack vs AppTabs)
-- [ ] Zustand authStore + persistence (если нужно)
+- [ ] Zustand authStore + persistence
 - [ ] Axios interceptor для refresh token на 401
 - [ ] Прототестирование на iPhone simulator
 
-### День 8: Profile Screen
+### День 10: Profile Screen + Privacy Policy
 
 - [ ] ProfileScreen (отображение профиля, кнопка выхода)
 - [ ] TanStack Query hook useProfileQuery
-- [ ] Skeleton loading state
-- [ ] Error state + retry
+- [ ] Skeleton loading state, error state + retry
+- [ ] Кнопка "Сообщить о проблеме" (feedback form)
+- [ ] Внизу ссылки: "Условия использования", "Политика конфиденциальности"
+- [ ] Модальное окно с MarkdownView загружает политику
 
-### День 9-10: Lessons Screens
+### День 11-12: Lessons Screens
 
-- [ ] UpcomingLessonsScreen (FlashList, pagination, pull-to-refresh)
-- [ ] PastLessonsScreen
-- [ ] LessonCard компонент
+- [ ] UpcomingLessonsScreen (FlashList, pull-to-refresh)
+- [ ] PastLessonsScreen (отсортировано DESC)
+- [ ] LessonCard компонент (React.memo)
 - [ ] TanStack Query hooks useUpcomingLessonsQuery, usePastLessonsQuery
 - [ ] Дата/время в локальной таймзоне (date-fns)
 - [ ] Loading/empty/error states
 - [ ] Прототестирование
 
-### День 11: i18n + Polish
+### День 13: i18n + Terms & Privacy
 
-- [ ] Заполнить ru.json все строки
+- [ ] Заполнить ru.json все строки (auth, profile, lessons, feedback)
 - [ ] Проверить все экраны на русском
+- [ ] Текст Terms of Service + Privacy Policy (или placeholder)
 - [ ] Убедиться, что дизайн соответствует (отступы, шрифты, цвета)
 - [ ] Тестирование light/dark theme
 
-### День 12: Integration Testing
+### День 14: Integration Testing
 
 - [ ] Запустить backend + mobile в Docker Compose
 - [ ] Полный flow: логин → профиль → список уроков → выход
 - [ ] Проверить все состояния (loading, error, empty)
 - [ ] Проверить timezone (создать уроки в разных часовых поясах)
-- [ ] Проверить разные роли (student vs teacher — убедиться, что видят только свои данные)
+- [ ] Проверить feedback отправку (должна придти в Telegram)
+- [ ] Проверить Sentry в случае ошибки на мобильном (выключи интернет, вернёшься — должна отправиться)
 
-### День 13-14: Bug Fixes + Archive + TestFlight
+### День 15: Privacy & Security Audit
+
+- [ ] Финальная проверка .gitignore (нет .env файлов в git)
+- [ ] Grep на console.log с чувствительными данными
+- [ ] Проверить нет ли JWT secrets в коде
+- [ ] Verify all env vars in .env.example
+- [ ] Code review перед финалом
+
+### День 16-17: Bug Fixes + TestFlight
 
 - [ ] Фиксить bugs из интеграционного тестирования
 - [ ] Код ревью (simplify, убрать unused imports)
@@ -601,7 +654,125 @@ useLoginMutation()          // POST /auth/login
 
 ---
 
-## 5. КРИТЕРИИ ГОТОВНОСТИ v1.0
+## 5. RISK MANAGEMENT В v1.0
+
+Следующие пункты **обязательны** для v1.0. Они отличают production-ready приложение от prototype'а.
+
+### 5.1 Sentry интеграция
+
+**Backend:**
+- Установить `@sentry/node` и `@sentry/tracing`
+- Инициализировать Sentry в начале `app.ts` с DSN из `SENTRY_DSN` env var
+- Подключить Sentry error handler middleware после других middleware
+- Ловить `process.on('uncaughtException')` и отправлять в Sentry
+- Бесплатный тариф: 5000 ошибок/месяц достаточно для v1.0
+
+**Mobile:**
+- Установить `@sentry/react-native`
+- Инициализировать в `AppProviders.tsx` с тем же Sentry project
+- Обернуть приложение в `<Sentry.ErrorBoundary>` + custom ErrorBoundary
+- Ловит crashes, unhandled promise rejections, console errors
+
+**Результат:** Все ошибки попадают на sentry.io, видны в dashboard, отправляются уведомления.
+
+### 5.2 Автоматические бэкапы PostgreSQL
+
+**Если managed database (DigitalOcean, AWS RDS):**
+- Включить автоматические бэкапы в интерфейсе хостера
+- Retention: 14 дней (обычно по умолчанию)
+- Не требует кода, просто галочка в настройках
+
+**Если Docker на своём сервере:**
+- Добавить cron-задачу: `pg_dump` каждую ночь в 02:00 UTC
+- Хранить 7 последних копий локально
+- Одну копию еженедельно копировать в S3 (дешёво для архива)
+- Документировать в README: как восстановить из бэкапа
+
+**Для v1.0:** Достаточно одной недельной копии в S3 + 7 локальных.
+
+### 5.3 UptimeRobot мониторинг
+
+**Backend endpoint:**
+- Добавить `GET /health` (публичный, без JWT)
+- Проверяет: БД доступна (простой SELECT 1), Redis работает (простой PING)
+- Возвращает 200 если OK, 503 если одна из зависимостей упала
+- Response: `{ "status": "ok" }`
+
+**UptimeRobot configuration:**
+- Создать free account на uptimerobot.com
+- Добавить HTTP check: пингует `GET /health` каждые 5 минут
+- Уведомление в Telegram при падении (бесплатно)
+- Логирует downtime историю — видна в dashboard
+
+**Результат:** Узнаёшь о падении за 5 минут.
+
+### 5.4 Feedback форма в приложении
+
+**Mobile:**
+- Кнопка "Сообщить о проблеме" в ProfileScreen (внизу)
+- Открывает modal с textarea + кнопка "Отправить"
+- POST `/feedback` с `{ message: string }`
+- На успех: тост "Спасибо, ваше сообщение отправлено"
+- На ошибку: показать ошибку + retry кнопка
+
+**Backend:**
+- POST `/feedback` (защищено JWT)
+- Body: `{ message: string }`
+- Бэкенд включает в отправку: user_id, timestamp, app_version, OS, device
+- BullMQ job отправляет в мой Telegram через Telegram bot (тот же, что для уведомлений в v1.1)
+
+**Результат:** Единственный реальный канал узнать о проблемах в v1.0. Критично для feedback loop.
+
+### 5.5 Разделение окружений (.env management)
+
+**Backend + Mobile:**
+- Создать `.env.development`, `.env.staging`, `.env.production`
+- По умолчанию используется `.env.development` (git ignored)
+- CI/CD использует `.env.staging` или `.env.production` из secrets
+
+**В коде:**
+- Все конфиги через env vars, **ничего не хардкожено**
+- API_URL (mobile): `https://api.soynativo.local` (dev) vs `https://api.soynativo.com` (prod)
+- DATABASE_URL, REDIS_URL, SENTRY_DSN, TELEGRAM_BOT_TOKEN — всё через env
+- Validate все env vars при старте (используем Zod)
+
+**В git:**
+- `.env`, `.env.*` в `.gitignore`
+- Только `.env.example` + комментарии (какие переменные нужны)
+- Pull request не содержит .env файлов
+
+### 5.6 Privacy Policy и Terms of Service
+
+**На LoginScreen:**
+- Внизу маленький текст: "Войдя в приложение, вы соглашаетесь с [Условиями использования] и [Политикой конфиденциальности]"
+- Ссылки открывают модальное окно с MarkdownView
+
+**На ProfileScreen:**
+- Кнопка "Условия" и "Политика" (опционально, если место позволит)
+
+**Где взять текст:**
+- Используй [termly.io](https://termly.io) (генератор бесплатный для MVP)
+- Скачай как Markdown или HTML
+- Положи в `apps/mobile/src/assets/legal/terms.md` и `privacy.md`
+- Mobile загружает из ассетов при старте
+
+**Результат:** Юридическая защита + соответствие AppStore guidelines.
+
+### 5.7 Privacy в коде
+
+**Проверки перед commit:**
+1. `cat .gitignore` — убедиться что `.env*` исключены
+2. `git ls-files | grep -E '\.env|secrets|token|key'` — нет секретов в git
+3. `grep -r "console\.log.*password\|token\|secret" apps/` — нет чувствительных данных в логах
+4. `grep -r "STRIPE\|stripe" apps/ backend/` — убедиться что нет Stripe кода
+5. `grep -r "YOUR_KEY\|YOUR_TOKEN\|hardcoded" apps/` — нет placeholder ключей
+6. Code review перед push: ищи любые хардкоженные URLs, ключи, пароли
+
+**Результат:** Приложение безопасно, no credentials leak риск.
+
+---
+
+## 6. КРИТЕРИИ ГОТОВНОСТИ v1.0
 
 Приложение готово к TestFlight, когда:
 
@@ -641,6 +812,20 @@ useLoginMutation()          // POST /auth/login
 - [ ] Если refresh token истёк, перенаправляет на логин
 - [ ] Таймзоны: созданы уроки в UTC, но отображаются в локальной таймзоне юзера
   - Пример: Урок на UTC 18:00 для юзера с таймзоной Бангкок (UTC+7) должен показываться как 01:00 (следующий день)
+
+### Risk Management
+- [ ] Sentry интеграция на backend (@sentry/node) — ловит exceptions, SENTRY_DSN в .env
+- [ ] Sentry интеграция на mobile (@sentry/react-native) — обёрнут в ErrorBoundary
+- [ ] GET /health endpoint на backend — проверяет БД + Redis, возвращает 200/503
+- [ ] UptimeRobot configured — пингует health endpoint каждые 5 минут, уведомление в Telegram
+- [ ] POST /feedback endpoint на backend (защищено JWT, отправляет в Telegram)
+- [ ] Feedback форма в ProfileScreen (textarea + отправка)
+- [ ] .env.development, .env.staging, .env.production созданы, .env.example документирован
+- [ ] .gitignore содержит .env и .env.* — нет secrets в git
+- [ ] Grep проверки: нет console.log с passwords/tokens, нет хардкоженных URLs
+- [ ] Privacy Policy и Terms of Service: ссылки на LoginScreen, модальные окна с текстом
+- [ ] Все env vars валидируются при старте (Zod validation)
+- [ ] Changelog для v1.0 написан и закоммичен
 
 ---
 
@@ -714,12 +899,22 @@ useLoginMutation()          // POST /auth/login
 
 ---
 
-## 8. ИТОГОВЫЕ УТОЧНЕНИЯ
+## 8. ОБЯЗАТЕЛЬНЫЕ ОТЛОЖЕНИЯ НА v1.1+
+
+Закладываем архитектуру, но активная реализация в v1.1+:
+
+- **Feature flags** — архитектура готова, но логика отсутствует
+- **Password reset через magic link** — только базовая аутентификация в v1.0
+- **Расширенный мониторинг (APM)** — Sentry покрывает ошибки, но no performance tracking
+
+---
+
+## 9. ИТОГОВЫЕ УТОЧНЕНИЯ
 
 **Дизайн-система:**
-- Палитра: cold bluish neutrals + purple brand color
-- Light/dark themes
-- Адаптировать Mark Design System под мобильное
+- Палитра: cold bluish neutrals + purple brand color (Mark Design System)
+- Light/dark themes поддерживаются
+- Адаптировать под мобильное, соответствие HIG (iOS) / Material (Android)
 
 **Cursor pagination:**
 - В v1.0 избыточна (макс ~100 уроков на ученика)
@@ -728,18 +923,56 @@ useLoginMutation()          // POST /auth/login
 
 **Apple Developer Account:**
 - Ты начнёшь параллельно оформлять ($99/год)
-- Будет активен к дню 14
+- Будет активен к дню 14-17
+
+**Bэкапы + UptimeRobot:**
+- Зависит от выбора хостинга (managed vs Docker)
+- Оба должны быть готовы перед первым production deployment (post v1.0)
 
 ---
 
-## 9. СУММА: СУХО
+## 10. СУММА: СУХО И РЕАЛИСТИЧНО
 
-- **Database:** lesson_participants вместо groups. Lesson.type enum (individual/group, default individual в v1.0). subscription_status есть в User, но не используется в логике.
-- **Backend:** 5 эндпоинтов (login, refresh, me, list lessons upcoming/past). RLS через JOIN с lesson_participants. Все ученики видят уроки независимо от подписки.
-- **Mobile:** 3 равноправных таба в bottom navigation (Предстоящие, Прошедшие, Профиль). TanStack Query + Zustand. date-fns для таймзон. i18next (ru.json).
-- **Timeline:** 14 дней до TestFlight. Дни 1-5: backend (миграция, auth, lessons API). Дни 6-14: mobile (UI, экраны, интеграция, QA).
-- **Риски:** текущая схема БД может отличаться, refresh token может быть не реализован, UI компоненты могут быть не готовы. EAS Build setup может затянуться.
+**Database:** 
+- lesson_participants many-to-many (вместо groups)
+- Lesson.type enum (individual/group, default individual)
+- User.timezone (default UTC), User.subscriptionStatus (не используется в v1.0 логике)
+
+**Backend:** 
+- 5 эндпоинтов: auth/login, auth/refresh, users/me, lessons (upstream/past)
+- 1 healthcheck: GET /health для UptimeRobot
+- 1 feedback: POST /feedback (отправляет в Telegram)
+- RLS через JOIN с lesson_participants
+- Sentry + Pino логирование
+
+**Mobile:** 
+- 3 равноправных таба: Предстоящие | Прошедшие | Профиль
+- Feedback форма в ProfileScreen
+- Privacy Policy + Terms of Service (модальные окна)
+- TanStack Query + Zustand + date-fns + i18next
+- Sentry ошибки + ErrorBoundary
+- Expo-secure-store для токенов, MMKV для cache
+
+**Timeline:** 
+- 16-17 дней до TestFlight (был 14, добавили risk management)
+- Дни 1-2: Database ✅
+- Дни 3-5: Backend API (auth, lessons, healthcheck, feedback)
+- Дни 6-7: Risk Management (Sentry, .env, privacy, feedback на backend+mobile)
+- Дни 8-13: Mobile (UI, auth, screens, i18n, integrations)
+- Дни 14-15: QA + Integration Testing
+- Дни 16-17: Bugs + TestFlight
+
+**Риски:** 
+- Refresh token могут быть не реализован
+- UI компоненты могут быть не готовы
+- EAS Build первый раз долгий (1-2 часа на setup)
+- Sentry + Telegram bot интеграция новые, может быть грабли с permissions
+
+**Unknowns:** 
+- Текущее состояние UI компонентов, refresh token логики
+- Точное время на интеграцию Telegram bot для feedback
+- EAS Build setup на твоём компьютере
 
 ---
 
-**Готов начинать день 1. Жду подтверждения.**
+**День 1-2 уже готовы. День 3 начинаем с auth backend. Жди статуса.**
