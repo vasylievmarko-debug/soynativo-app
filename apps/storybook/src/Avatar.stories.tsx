@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import React from 'react';
 import { View } from 'react-native';
 // @ts-ignore
-import { Avatar } from '../../apps/mobile/src/shared/ui/atoms/Avatar';
+import { Avatar } from '../../mobile/src/shared/ui/atoms/Avatar';
 
 const meta: Meta<typeof Avatar> = {
   title: 'Atoms/Avatar',

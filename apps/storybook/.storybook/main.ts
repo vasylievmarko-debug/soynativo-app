@@ -28,6 +28,31 @@ const config: StorybookConfig = {
       ...(config.resolve.alias || {}),
       'react-native$': 'react-native-web',
     };
+    config.resolve.extensions = Array.from(
+      new Set([...(config.resolve.extensions || []), '.ts', '.tsx', '.js', '.jsx']),
+    );
+
+    config.module = config.module || { rules: [] };
+    config.module.rules = config.module.rules || [];
+    config.module.rules.push({
+      test: /\.(ts|tsx|js|jsx)$/,
+      exclude: /node_modules/,
+      use: [
+        {
+          loader: require.resolve('babel-loader'),
+          options: {
+            babelrc: false,
+            configFile: false,
+            presets: [
+              [require.resolve('@babel/preset-env'), { targets: { esmodules: true } }],
+              [require.resolve('@babel/preset-react'), { runtime: 'automatic' }],
+              require.resolve('@babel/preset-typescript'),
+            ],
+          },
+        },
+      ],
+    });
+
     return config;
   },
 };

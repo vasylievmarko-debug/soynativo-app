@@ -3,7 +3,7 @@ import React from 'react';
 import { View } from 'react-native';
 // Импортируем Button из мобильного приложения
 // @ts-ignore - react-native-web compatibility
-import { Button } from '../../apps/mobile/src/shared/ui/atoms/Button';
+import { Button } from '../../mobile/src/shared/ui/atoms/Button';
 
 /**
  * Button компонент для основных действий.

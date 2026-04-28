@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 // @ts-ignore
-import { Spinner } from '../../apps/mobile/src/shared/ui/atoms/Spinner';
+import { Spinner } from '../../mobile/src/shared/ui/atoms/Spinner';
 
 const meta: Meta<typeof Spinner> = {
   title: 'Atoms/Spinner',

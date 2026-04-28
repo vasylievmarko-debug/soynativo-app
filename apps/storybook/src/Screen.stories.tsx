@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import React from 'react';
 // @ts-ignore
-import { Screen } from '../../apps/mobile/src/shared/ui/atoms/Screen';
+import { Screen } from '../../mobile/src/shared/ui/atoms/Screen';
 // @ts-ignore
-import { Text } from '../../apps/mobile/src/shared/ui/atoms/Text';
+import { Text } from '../../mobile/src/shared/ui/atoms/Text';
 
 const meta: Meta<typeof Screen> = {
   title: 'Atoms/Screen',

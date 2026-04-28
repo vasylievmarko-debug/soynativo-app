@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import React, { useState } from 'react';
 // @ts-ignore
-import { Input } from '../../apps/mobile/src/shared/ui/atoms/Input';
+import { Input } from '../../mobile/src/shared/ui/atoms/Input';
 
 const meta: Meta<typeof Input> = {
   title: 'Atoms/Input',

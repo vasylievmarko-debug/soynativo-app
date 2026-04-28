@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 // @ts-ignore
-import { EmptyState } from '../../apps/mobile/src/shared/ui/organisms/EmptyState';
+import { EmptyState } from '../../mobile/src/shared/ui/organisms/EmptyState';
 
 const meta: Meta<typeof EmptyState> = {
   title: 'Organisms/EmptyState',

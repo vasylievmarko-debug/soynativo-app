@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import React from 'react';
 import { View } from 'react-native';
 // @ts-ignore
-import { Text } from '../../apps/mobile/src/shared/ui/atoms/Text';
+import { Text } from '../../mobile/src/shared/ui/atoms/Text';
 
 const meta: Meta<typeof Text> = {
   title: 'Atoms/Text',

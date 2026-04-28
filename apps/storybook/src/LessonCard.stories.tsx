@@ -2,11 +2,11 @@ import type { Meta, StoryObj } from '@storybook/react';
 import React from 'react';
 import { View } from 'react-native';
 // @ts-ignore
-import { Card } from '../../apps/mobile/src/shared/ui/molecules/Card';
+import { Card } from '../../mobile/src/shared/ui/molecules/Card';
 // @ts-ignore
-import { Text } from '../../apps/mobile/src/shared/ui/atoms/Text';
+import { Text } from '../../mobile/src/shared/ui/atoms/Text';
 // @ts-ignore
-import { Avatar } from '../../apps/mobile/src/shared/ui/atoms/Avatar';
+import { Avatar } from '../../mobile/src/shared/ui/atoms/Avatar';
 
 /**
  * Карточка урока — специализированный компонент для отображения информации об уроке.
