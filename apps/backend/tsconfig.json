@@ -27,9 +27,12 @@
       "@modules/*": ["src/modules/*"],
       "@shared/*": ["src/shared/*"],
       "@integrations/*": ["src/integrations/*"],
-      "@soynativo/shared": ["../../packages/shared/src"]
+      "@soynativo/shared": ["../../packages/shared/dist"]
     }
   },
   "include": ["src"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+  "exclude": ["node_modules", "dist", "**/*.test.ts"],
+  "references": [
+    { "path": "../../packages/shared" }
+  ]
 }

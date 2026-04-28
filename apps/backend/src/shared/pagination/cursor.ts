@@ -46,7 +46,7 @@ export function decodeCursor(token: string): DecodedCursor | null {
   }
 }
 
-export async function paginate<T extends { id: string } & Record<string, unknown>>(
+export async function paginate<T extends { id: string }>(
   qb: SelectQueryBuilder<T>,
   { sortField, direction = 'DESC', cursor, limit }: CursorParams
 ): Promise<CursorPage<T>> {
@@ -72,7 +72,7 @@ export async function paginate<T extends { id: string } & Record<string, unknown
   const items = rows.slice(0, safeLimit);
   const hasMore = rows.length > safeLimit;
   const last = items[items.length - 1];
-  const nextCursor = hasMore && last ? encodeCursor(last[sortField] as string | number, last.id) : null;
+  const nextCursor = hasMore && last ? encodeCursor((last as Record<string, unknown>)[sortField] as string | number, last.id) : null;
 
   return { items, nextCursor };
 }

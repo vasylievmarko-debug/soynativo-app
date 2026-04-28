@@ -33,5 +33,3 @@ export const CreateBookingSchema = z.object({
 
 export type RegisterInput = z.infer<typeof RegisterSchema>;
 export type LoginInput = z.infer<typeof LoginSchema>;
-export type CreateLessonInput = z.infer<typeof CreateLessonSchema>;
-export type CreateBookingInput = z.infer<typeof CreateBookingSchema>;

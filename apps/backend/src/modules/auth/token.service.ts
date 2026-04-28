@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken';
+import jwt, { type SignOptions } from 'jsonwebtoken';
 import { injectable } from 'tsyringe';
 import { env } from '@config/env';
 import type { UserRole } from '@soynativo/shared';
@@ -16,10 +16,10 @@ export class TokenService {
   issuePair(user: AccessTokenPayload): TokenPair {
     const accessToken = jwt.sign(user, env.JWT_ACCESS_SECRET, {
       expiresIn: env.JWT_ACCESS_TTL,
-    });
+    } as SignOptions);
     const refreshToken = jwt.sign({ sub: user.sub }, env.JWT_REFRESH_SECRET, {
       expiresIn: env.JWT_REFRESH_TTL,
-    });
+    } as SignOptions);
     return { accessToken, refreshToken };
   }
 
