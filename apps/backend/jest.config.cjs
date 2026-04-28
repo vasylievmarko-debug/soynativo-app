@@ -1,11 +1,9 @@
-import type { Config } from 'jest';
-
 /**
  * Two projects keep unit tests fast (no I/O) and integration tests isolated
  * (real Postgres + Redis via docker-compose). CI runs both; locally you can
  * run `yarn test -- --selectProjects unit` for the tight feedback loop.
  */
-const config: Config = {
+const config = {
   rootDir: '.',
   projects: [
     {
@@ -67,4 +65,4 @@ const config: Config = {
   },
 };
 
-export default config;
+module.exports = config;
