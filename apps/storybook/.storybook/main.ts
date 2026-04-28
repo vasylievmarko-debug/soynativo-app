@@ -27,6 +27,8 @@ const config: StorybookConfig = {
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
       'react-native$': 'react-native-web',
+      'react-native-reanimated': require.resolve('./mocks/reanimated.js'),
+      'react-native-safe-area-context': require.resolve('./mocks/safe-area-context.js'),
     };
     config.resolve.extensions = Array.from(
       new Set([...(config.resolve.extensions || []), '.ts', '.tsx', '.js', '.jsx']),
