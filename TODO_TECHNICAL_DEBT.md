@@ -4,6 +4,32 @@
 
 ---
 
+## Pre-existing TypeScript errors in mobile
+
+Surfaced during SDK 50 → 51 migration but not related. These existed before and were not caught because previous type-check runs may not have been done.
+
+1. **`apps/mobile/src/app/providers/AppProviders.tsx:4:10`**
+   Import: `createSyncStoragePersister` from `@tanstack/query-async-storage-persister`
+   Should be: `createAsyncStoragePersister`
+
+   **Fix:** rename import + verify usage works correctly with async storage persister pattern.
+
+2. **`apps/mobile/src/shared/ui/atoms/__tests__/Button.test.tsx:9:33`**
+   Property `toHaveTextContent` not on `JestMatchers`.
+
+   **Fix:** Setup `@testing-library/jest-native` via jest setup file:
+   - Install `@testing-library/jest-native` if not present
+   - Add to `apps/mobile/jest.setup.ts`:
+     ```ts
+     import '@testing-library/jest-native/extend-expect';
+     ```
+   - Reference setup file in jest.config
+
+**When:** After full SDK migration (Step 4 done).
+**Why later:** These don't block Metro bundler. Fixing them during migration would mix concerns.
+
+---
+
 ## Worker DI compatibility under tsx
 
 `apps/backend/src/core/queue/workers/notifications.worker.ts` uses tsyringe DI but is launched via tsx in `worker:notifications` script. This will fail with same error backend dev had: "TypeInfo not known".
