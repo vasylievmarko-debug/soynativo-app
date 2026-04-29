@@ -4,23 +4,6 @@
 
 ---
 
-## Migrate data-source.ts to ESM (next session priority)
-
-`apps/backend/src/core/database/data-source.ts` использует `__filename`, который undefined в ESM scope. Backend имеет `"type": "module"`, но `data-source.ts` использует CommonJS паттерн.
-
-Это **блокирует** `migration:run` и `seed` (seed использует тот же data-source).
-
-**Решение (Variant A):** Заменить `__filename.endsWith('.js')` на `import.meta.url.endsWith('.js')`. Семантика та же, корректно для ESM.
-
-Также проверить другие CJS-паттерны в backend:
-- `__dirname`
-- `require()`
-- `module.exports`
-
-**Время:** 15-30 минут следующей сессии.
-
----
-
 ## Refactor: shared package resolution (Вариант C)
 
 **Сейчас:** `packages/shared` собирается в `dist/`, и backend/mobile импортируют оттуда.
@@ -71,3 +54,17 @@ Unknown option "testTimeout" with value 30000 was found.
 **Связанные файлы:**
 - `apps/backend/src/config/env.ts`
 - `apps/backend/.env.example` (можно раскомментировать поля после фикса)
+
+---
+
+## Standardize bcrypt import style across backend
+
+Project mixes two import styles for `bcryptjs`:
+- `auth.service.ts` and `seed.ts` use: `import bcrypt from 'bcryptjs'`
+- `auth.integration.test.ts` uses: `import * as bcrypt from 'bcryptjs'`
+
+Both work but inconsistently. Namespace-style works under jest/ts-jest but failed under tsx (esbuild). Default import works in both contexts.
+
+**Recommended:** standardize on default import everywhere. Update `auth.integration.test.ts` to match.
+
+**When:** post-v1.0, low priority.

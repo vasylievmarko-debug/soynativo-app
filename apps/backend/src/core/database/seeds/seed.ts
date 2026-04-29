@@ -1,4 +1,4 @@
-import * as bcrypt from 'bcryptjs';
+import bcrypt from 'bcryptjs';
 import { env } from '@config/env';
 import { UserEntity } from '@modules/users/user.entity';
 import { LessonEntity } from '@modules/lessons/lesson.entity';
