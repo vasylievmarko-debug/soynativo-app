@@ -64,22 +64,30 @@ echo ""
 echo -e "${YELLOW}Нажми Enter когда добавишь ключ в GitHub...${NC}"
 read
 
-# 4. Проверить SSH подключение
+# 4. Добавить GitHub в known_hosts
 echo ""
-echo "4️⃣  Проверка SSH подключения..."
+echo "4️⃣  Добавляю GitHub в known_hosts..."
+mkdir -p ~/.ssh
+ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null || true
+echo -e "${GREEN}✓ GitHub добавлен${NC}"
+
+# 5. Проверить SSH подключение
+echo ""
+echo "5️⃣  Проверка SSH подключения..."
 if ssh -T git@github.com 2>&1 | grep -q "successfully authenticated"; then
     echo -e "${GREEN}✓ SSH подключение работает!${NC}"
 else
     echo -e "${RED}✗ SSH подключение не работает${NC}"
-    echo "Убедись что ключ добавлен в GitHub и попробуй снова:"
+    echo "Убедись что ключ добавлен в GitHub (может потребоваться 1-2 минуты)"
+    echo "Попробуем ещё раз..."
+    sleep 2
     ssh -T git@github.com
-    exit 1
 fi
 
 echo ""
 
-# 5. Клонировать репозиторий
-echo "5️⃣  Клонирование репозитория..."
+# 6. Клонировать репозиторий
+echo "6️⃣  Клонирование репозитория..."
 read -p "Где клонировать? (по умолчанию ~/Projects): " CLONE_PATH
 CLONE_PATH=${CLONE_PATH:-~/Projects}
 
@@ -97,8 +105,8 @@ fi
 
 echo ""
 
-# 6. Установить зависимости
-echo "6️⃣  Установка зависимостей (yarn)..."
+# 7. Установить зависимости
+echo "7️⃣  Установка зависимостей (yarn)..."
 if command -v yarn &> /dev/null; then
     echo -e "${GREEN}✓ Yarn уже установлен$(yarn --version)${NC}"
 else
