@@ -71,22 +71,18 @@ mkdir -p ~/.ssh
 ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null || true
 echo -e "${GREEN}✓ GitHub добавлен${NC}"
 
-# 5. Проверить SSH подключение
+# 5. Проверить SSH подключение (с timeout)
 echo ""
 echo "5️⃣  Проверка SSH подключения..."
-# Use stdin redirection to prevent SSH hanging when piped through bash
-SSH_OUTPUT=$(ssh -T git@github.com </dev/null 2>&1)
-SSH_RESULT=$?
+# Use timeout to prevent hang when piped through bash (TTY issues)
+SSH_OUTPUT=$(ssh -o BatchMode=yes -o ConnectTimeout=10 -T git@github.com </dev/null 2>&1) || true
 
-# GitHub returns exit code 1 when authenticated (which is actually success)
-if [[ $SSH_RESULT -eq 1 ]] || echo "$SSH_OUTPUT" | grep -q "authenticated"; then
+if echo "$SSH_OUTPUT" | grep -q "authenticated"; then
     echo -e "${GREEN}✓ SSH подключение работает!${NC}"
 else
-    echo -e "${RED}✗ SSH подключение не работает${NC}"
+    echo -e "${YELLOW}⚠ Не могу автоматически проверить SSH${NC}"
     echo "Вывод: $SSH_OUTPUT"
-    echo "Убедись что ключ добавлен в GitHub и попробуй снова:"
-    echo "  ssh -T git@github.com"
-    exit 1
+    echo "Продолжаю — клонирование само покажет работает ли SSH..."
 fi
 
 echo ""
