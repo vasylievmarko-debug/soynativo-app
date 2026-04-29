@@ -74,15 +74,16 @@ echo -e "${GREEN}✓ GitHub добавлен${NC}"
 # 5. Проверить SSH подключение
 echo ""
 echo "5️⃣  Проверка SSH подключения..."
-SSH_OUTPUT=$(ssh -T git@github.com 2>&1)
+# Use stdin redirection to prevent SSH hanging when piped through bash
+SSH_OUTPUT=$(ssh -T git@github.com </dev/null 2>&1)
 SSH_RESULT=$?
 
-# GitHub returns exit code 1 when authenticated (which is actually success for our purposes)
+# GitHub returns exit code 1 when authenticated (which is actually success)
 if [[ $SSH_RESULT -eq 1 ]] || echo "$SSH_OUTPUT" | grep -q "authenticated"; then
     echo -e "${GREEN}✓ SSH подключение работает!${NC}"
 else
     echo -e "${RED}✗ SSH подключение не работает${NC}"
-    echo "Ошибка: $SSH_OUTPUT"
+    echo "Вывод: $SSH_OUTPUT"
     echo "Убедись что ключ добавлен в GitHub и попробуй снова:"
     echo "  ssh -T git@github.com"
     exit 1
