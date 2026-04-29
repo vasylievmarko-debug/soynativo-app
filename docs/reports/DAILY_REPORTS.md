@@ -13,6 +13,38 @@
 
 ================================================================================
 
+## 2026-04-29 (morning session)
+
+**Done:**
+- Fixed __filename → import.meta.url in data-source.ts
+- Migrations ran successfully (InitialSchema + V1Schema)
+- 6 tables created in DB
+- Fixed bcrypt namespace import → default import in seed.ts
+- Seed ran successfully
+- A4 verified: 18 individual lessons (9 past + 9 future)
+- 4 users created (1 teacher + 3 students)
+- Each lesson has exactly 1 participant
+
+**Decisions:**
+- Variant A for bcrypt (default import) + TODO for namespace cleanup
+- Removed completed item from TODO_TECHNICAL_DEBT.md
+
+**Status: backend fully operational locally**
+- Postgres + Redis healthy
+- All migrations applied
+- Seed data loaded
+- Test credentials:
+  teacher: teacher@example.com / teacher123
+  students: student1/2/3@example.com / student123
+
+**Next priorities:**
+1. Decide v1.0 scope (BookingsScreen, Google Meet, Telegram bot)
+2. Risk Management minimum (Sentry, /health, feedback, Privacy)
+3. First run on iPhone via Expo Go
+4. Run integration tests against local DB
+
+================================================================================
+
 ## 2026-04-29 (overnight session)
 
 **Done:**
