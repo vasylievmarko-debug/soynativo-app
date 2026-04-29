@@ -4,6 +4,28 @@
 
 ---
 
+## Worker DI compatibility under tsx
+
+`apps/backend/src/core/queue/workers/notifications.worker.ts` uses tsyringe DI but is launched via tsx in `worker:notifications` script. This will fail with same error backend dev had: "TypeInfo not known".
+
+When worker becomes needed (Telegram notifications, scheduled jobs), migrate `worker:notifications` script to `@swc-node/register` similar to dev script.
+
+**Workaround:** same `.swcrc` applies, just change script in `apps/backend/package.json` from:
+
+```
+"worker:notifications": "tsx src/core/queue/workers/notifications.worker.ts"
+```
+
+To:
+
+```
+"worker:notifications": "node --import @swc-node/register/esm-register src/core/queue/workers/notifications.worker.ts"
+```
+
+**When:** when notifications feature is implemented (v1.1+).
+
+---
+
 ## Refactor: shared package resolution (Вариант C)
 
 **Сейчас:** `packages/shared` собирается в `dist/`, и backend/mobile импортируют оттуда.
