@@ -1,5 +1,42 @@
 # Soynativo - Language Learning Platform
 
+## 🎯 Current Status
+
+**Last updated:** 2026-04-29
+**Active branch:** `claude/language-learning-app-LWdbd`
+**Phase:** Phase 2 — Core Features (in progress)
+
+### What's done
+- ✅ Phase 1 Foundation: project structure, JWT auth, user roles, DB schema
+- ✅ Backend MVP: 17 TS errors resolved, unit tests passing (auth.service)
+- ✅ Mobile screens: LoginScreen, LessonsScreen (cursor pagination), ProfileScreen
+- ✅ Codespaces dev environment (`.devcontainer/`)
+- ✅ Docker Compose for local Postgres + Redis (`docker-compose.yml`)
+- ✅ Cross-device Git workflow: SSH keys, scripts/setup-git-macos.sh
+- ✅ Local copy on iMac at `~/Projects/soynativo-app`
+
+### Next up
+- 🔲 Run migrations + seed in Codespaces (yarn workspace @soynativo/backend migration:run / seed)
+- 🔲 Verify A4 (≥18 individual lessons) and A5 (/auth/register returns 404)
+- 🔲 Implement BookingsScreen (currently placeholder)
+- 🔲 Test full app flow on real iPhone via Expo Go
+- 🔲 Google Meet integration
+- 🔲 Telegram bot integration
+
+### Known constraints
+- Backend `package.json` uses `"type": "module"` → use `jest.config.cjs` (not `.ts`)
+- LOG_LEVEL valid values: `debug | info | warn | error` (not `silent`)
+- Husky hooks not executable in current sandbox (commits show warning, harmless)
+
+### Devices
+- iMac (Marks-iMac) — primary local dev, fully set up
+- Codespaces — for iPhone/iPad access via browser
+- Cloud Claude session — separate working copy at `/home/user/soynativo-app`
+
+> 💡 Update this section at the end of each session so the next Claude (here or on another device) picks up where we left off.
+
+---
+
 ## 📋 Описание проекта
 
 Кроссплатформенное приложение для обучения иностранным языкам (iOS/Android) со следующими функциями:
