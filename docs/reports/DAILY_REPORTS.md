@@ -13,6 +13,42 @@
 
 ================================================================================
 
+## 2026-04-29 (overnight session)
+
+**Done:**
+- @soynativo/shared package built (dist/, type-check 0 errors)
+- 4 unit tests passing
+- Docker Desktop installed and running
+- Postgres 16 + Redis 7 healthy
+- Git author fixed (local + global)
+- Migration tool: typeorm-ts-node-esm → tsx
+- .env created with proper credentials
+- .env.example fixed (commented empty URLs)
+
+**Decisions:**
+- Variant A for shared package (build dist/)
+- Variant A1 for migration tool (tsx wrapper)
+- Variant A for env empty strings
+- Defer __filename ESM fix to next session
+
+**Blockers:**
+- data-source.ts uses __filename in ESM
+- Migrations and seed both blocked
+
+**Next session priorities:**
+1. Fix __filename → import.meta.url (Variant A)
+2. Run migrations, verify A4
+3. Run seed
+4. Decide v1.0 scope: BookingsScreen, Google Meet, Telegram bot
+5. Risk Management minimum
+6. First run on iPhone via Expo Go
+
+**Note for next session:**
+Switch model to Sonnet 4.6 for routine tasks to save quota.
+Keep Opus 4.7 only for architecture decisions.
+
+================================================================================
+
 ## 2026-04-29 — День: процесс отчётов + Storybook
 
 ### Сделано
