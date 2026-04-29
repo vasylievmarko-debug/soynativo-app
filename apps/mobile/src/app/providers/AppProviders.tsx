@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { QueryClient } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
-import { createSyncStoragePersister } from '@tanstack/query-async-storage-persister';
+import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '@shared/i18n';
