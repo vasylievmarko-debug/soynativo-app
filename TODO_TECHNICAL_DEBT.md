@@ -4,6 +4,28 @@
 
 ---
 
+## Migrate yarn 1 → pnpm + complete SDK upgrade to 54+
+
+**Current state:** SDK 52 is the highest we can reach with yarn 1.
+
+**Why yarn 1 blocks:** SDK 53+ requires `metro@0.82+`, but yarn 1 hoisting algorithm picks `metro@0.80.x` as 'majority' from multiple packages still requiring 0.80.x. Resolutions hack helps for SDK 50/51/52 but creates new conflicts in SDK 53+.
+
+**Lessons from failed SDK 53 attempt:**
+1. Phantom deps exist in mobile (`expo-constants` imported but not in `package.json`). Will surface during pnpm migration.
+2. yarn 1 cannot be made to work with SDK 53+ via reasonable resolutions strategies.
+3. Nuclear `rm -rf node_modules + yarn install` reproduces same tree (yarn 1 deterministic).
+
+**Recommended path:**
+1. Migrate yarn 1 → pnpm (separate sprint, ~1-2 days)
+2. After pnpm: SDK 52 → 53 → 54 should work cleanly
+3. Or use Xcode's `expo run:ios` indefinitely on SDK 52 (no Expo Go dependency)
+
+**When:** After product design and first iteration of features.
+
+**Estimated time:** 1-2 days for pnpm migration + 2-4 hours for SDK 53 → 54 after pnpm. Total: ~3 days focused work.
+
+---
+
 ## Pre-existing TypeScript errors in mobile
 
 Surfaced during SDK 50 → 51 migration but not related. These existed before and were not caught because previous type-check runs may not have been done.
