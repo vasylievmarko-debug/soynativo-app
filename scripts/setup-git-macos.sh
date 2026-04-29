@@ -5,129 +5,125 @@ echo "🚀 Soynativo Git Setup для macOS"
 echo "================================="
 echo ""
 
-# Цвета для вывода
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# 1. Проверить и установить Git
-echo "1️⃣  Проверка Git..."
+# Detect if running interactively (terminal) or piped (curl|bash)
+if [ -t 0 ]; then
+    INTERACTIVE=1
+else
+    INTERACTIVE=0
+fi
+
+# 1. Git
+echo "1️⃣  Git..."
 if ! command -v git &> /dev/null; then
-    echo -e "${YELLOW}Git не найден. Устанавливаю...${NC}"
-
-    # Проверить Homebrew
     if ! command -v brew &> /dev/null; then
-        echo -e "${YELLOW}Homebrew не найден. Устанавливаю Homebrew...${NC}"
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     fi
-
     brew install git
-    echo -e "${GREEN}✓ Git установлен${NC}"
-else
-    echo -e "${GREEN}✓ Git уже установлен$(git --version)${NC}"
 fi
-
+echo -e "${GREEN}✓ $(git --version)${NC}"
 echo ""
 
-# 2. Настроить Git identity
-echo "2️⃣  Настройка Git identity..."
-read -p "Введи своё имя: " USER_NAME
-read -p "Введи свой email: " USER_EMAIL
+# 2. Git identity (skip if already set or non-interactive)
+echo "2️⃣  Git identity..."
+EXISTING_NAME=$(git config --global user.name || echo "")
+EXISTING_EMAIL=$(git config --global user.email || echo "")
 
-git config --global user.name "$USER_NAME"
-git config --global user.email "$USER_EMAIL"
+if [ -n "$EXISTING_NAME" ] && [ -n "$EXISTING_EMAIL" ]; then
+    echo -e "${GREEN}✓ Уже настроено: $EXISTING_NAME <$EXISTING_EMAIL>${NC}"
+elif [ "$INTERACTIVE" = "1" ]; then
+    read -p "Имя: " USER_NAME
+    read -p "Email: " USER_EMAIL
+    git config --global user.name "$USER_NAME"
+    git config --global user.email "$USER_EMAIL"
+    echo -e "${GREEN}✓ Настроено${NC}"
+else
+    echo -e "${YELLOW}⚠ Запусти потом: git config --global user.name 'Имя' && git config --global user.email 'mail@example.com'${NC}"
+fi
+
 git config --global init.defaultBranch main
 git config --global pull.rebase false
-
-echo -e "${GREEN}✓ Git identity настроена${NC}"
 echo ""
 
-# 3. Создать SSH ключ
-echo "3️⃣  SSH ключи..."
-SSH_KEY_PATH="$HOME/.ssh/id_ed25519"
-
-if [ -f "$SSH_KEY_PATH" ]; then
-    echo -e "${GREEN}✓ SSH ключ уже существует${NC}"
+# 3. SSH ключ
+echo "3️⃣  SSH ключ..."
+SSH_KEY="$HOME/.ssh/id_ed25519"
+if [ -f "$SSH_KEY" ]; then
+    echo -e "${GREEN}✓ Существует${NC}"
 else
-    echo -e "${YELLOW}Создаю новый SSH ключ...${NC}"
-    ssh-keygen -t ed25519 -C "$USER_EMAIL" -f "$SSH_KEY_PATH" -N ""
-    echo -e "${GREEN}✓ SSH ключ создан${NC}"
+    EMAIL_FOR_KEY=$(git config --global user.email || echo "user@local")
+    ssh-keygen -t ed25519 -C "$EMAIL_FOR_KEY" -f "$SSH_KEY" -N ""
+    echo -e "${GREEN}✓ Создан${NC}"
 fi
+echo ""
 
-echo ""
-echo -e "${YELLOW}📋 Скопируй этот публичный ключ в GitHub:${NC}"
-echo "https://github.com/settings/keys → New SSH key"
-echo ""
-cat "$SSH_KEY_PATH.pub"
-echo ""
-echo -e "${YELLOW}Нажми Enter когда добавишь ключ в GitHub...${NC}"
-read
-
-# 4. Добавить GitHub в known_hosts
-echo ""
-echo "4️⃣  Добавляю GitHub в known_hosts..."
+# 4. known_hosts (надёжная версия для всех ключей GitHub)
+echo "4️⃣  GitHub в known_hosts..."
 mkdir -p ~/.ssh
-ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null || true
-echo -e "${GREEN}✓ GitHub добавлен${NC}"
-
-# 5. Проверить SSH подключение (с timeout)
-echo ""
-echo "5️⃣  Проверка SSH подключения..."
-# Use timeout to prevent hang when piped through bash (TTY issues)
-SSH_OUTPUT=$(ssh -o BatchMode=yes -o ConnectTimeout=10 -T git@github.com </dev/null 2>&1) || true
-
-if echo "$SSH_OUTPUT" | grep -q "authenticated"; then
-    echo -e "${GREEN}✓ SSH подключение работает!${NC}"
-else
-    echo -e "${YELLOW}⚠ Не могу автоматически проверить SSH${NC}"
-    echo "Вывод: $SSH_OUTPUT"
-    echo "Продолжаю — клонирование само покажет работает ли SSH..."
+touch ~/.ssh/known_hosts
+if ! grep -q "github.com" ~/.ssh/known_hosts; then
+    ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
 fi
-
+echo -e "${GREEN}✓ Готово${NC}"
 echo ""
 
-# 6. Клонировать репозиторий
-echo "6️⃣  Клонирование репозитория..."
-read -p "Где клонировать? (по умолчанию ~/Projects): " CLONE_PATH
-CLONE_PATH=${CLONE_PATH:-~/Projects}
+# 5. Показать публичный ключ
+echo "5️⃣  Твой публичный SSH ключ:"
+echo "---"
+cat "$SSH_KEY.pub"
+echo "---"
+echo ""
+echo -e "${YELLOW}Если ещё не добавил — добавь его в GitHub:${NC}"
+echo "  https://github.com/settings/keys"
+echo ""
 
+# 6. Клонировать (это и есть проверка SSH)
+echo "6️⃣  Клонирование soynativo-app..."
+CLONE_PATH="$HOME/Projects"
 mkdir -p "$CLONE_PATH"
 cd "$CLONE_PATH"
 
-if [ -d "soynativo-app" ]; then
-    echo -e "${YELLOW}Папка soynativo-app уже существует${NC}"
+if [ -d "soynativo-app/.git" ]; then
+    echo -e "${GREEN}✓ Репо уже клонирован в $CLONE_PATH/soynativo-app${NC}"
     cd soynativo-app
+    git fetch origin
+    echo -e "${GREEN}✓ Обновлён${NC}"
 else
-    git clone git@github.com:vasylievmarko-debug/soynativo-app.git
-    cd soynativo-app
-    echo -e "${GREEN}✓ Репозиторий клонирован${NC}"
+    if git clone git@github.com:vasylievmarko-debug/soynativo-app.git; then
+        cd soynativo-app
+        echo -e "${GREEN}✓ Клонирован${NC}"
+    else
+        echo -e "${RED}✗ Не удалось клонировать.${NC}"
+        echo ""
+        echo "Проверь что:"
+        echo "  1. SSH ключ добавлен в GitHub (https://github.com/settings/keys)"
+        echo "  2. Команда работает: ssh -T git@github.com"
+        exit 1
+    fi
 fi
-
 echo ""
 
-# 7. Установить зависимости
-echo "7️⃣  Установка зависимостей (yarn)..."
-if command -v yarn &> /dev/null; then
-    echo -e "${GREEN}✓ Yarn уже установлен$(yarn --version)${NC}"
-else
-    echo -e "${YELLOW}Yarn не найден. Устанавливаю...${NC}"
+# 7. Yarn
+echo "7️⃣  Yarn..."
+if ! command -v yarn &> /dev/null; then
     npm install -g yarn
 fi
-
-yarn install
-echo -e "${GREEN}✓ Зависимости установлены${NC}"
-
+echo -e "${GREEN}✓ $(yarn --version)${NC}"
 echo ""
+
+# 8. Установить зависимости
+echo "8️⃣  yarn install..."
+yarn install
+echo ""
+
 echo "================================="
 echo -e "${GREEN}✅ Всё готово!${NC}"
 echo ""
-echo "Твоя локальная копия находится в:"
-echo "  $CLONE_PATH/soynativo-app"
+echo "Папка проекта: $CLONE_PATH/soynativo-app"
 echo ""
-echo "Следующие шаги:"
-echo "  1. cd $CLONE_PATH/soynativo-app"
-echo "  2. git status  # проверить статус"
-echo "  3. git log --oneline -5  # посмотреть коммиты"
-echo ""
-echo "Готово для разработки! 🎉"
+echo "cd $CLONE_PATH/soynativo-app"
+echo "git status"
