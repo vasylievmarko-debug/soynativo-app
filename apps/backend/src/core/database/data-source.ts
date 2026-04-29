@@ -6,7 +6,7 @@ import { SlowQueryLogger } from './slow-query-logger';
 // In development we run TypeScript directly via `tsx`, so glob paths must point
 // at .ts files. After `tsc` build, the same files are emitted as .js inside
 // `dist/`. We pick the right path at runtime instead of duplicating configs.
-const isCompiled = __filename.endsWith('.js');
+const isCompiled = import.meta.url.endsWith('.js');
 const ext = isCompiled ? 'js' : 'ts';
 const root = isCompiled ? 'dist' : 'src';
 
