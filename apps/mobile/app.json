@@ -8,7 +8,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.soynativo.app",
+      "bundleIdentifier": "com.markvasiliev.soynativo",
       "buildNumber": "1",
       "infoPlist": {
         "NSCameraUsageDescription": "Soynativo uses the camera during video lessons.",
@@ -16,7 +16,7 @@
       }
     },
     "android": {
-      "package": "com.soynativo.app",
+      "package": "com.markvasiliev.soynativo",
       "versionCode": 1,
       "permissions": ["CAMERA", "RECORD_AUDIO"]
     },
